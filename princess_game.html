@@ -205,6 +205,146 @@
             z-index: 100;
         }
 
+        /* --- 公主角色樣式 --- */
+        .princess-container {
+            position: fixed;
+            bottom: 20px;
+            right: 50px;
+            width: 150px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            transition: transform 0.3s;
+        }
+
+        .princess-head {
+            width: 60px;
+            height: 60px;
+            background: #ffe0bd;
+            border-radius: 50%;
+            position: relative;
+            z-index: 3;
+        }
+
+        .princess-hair {
+            position: absolute;
+            top: -5px;
+            left: -10px;
+            width: 80px;
+            height: 90px;
+            background: #ffd700;
+            border-radius: 40% 40% 20% 20%;
+            z-index: -1;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+
+        .princess-crown {
+            position: absolute;
+            top: -15px;
+            left: 15px;
+            display: flex;
+            gap: 2px;
+            z-index: 4;
+        }
+
+        .crown-spike {
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 15px solid var(--princess-gold);
+        }
+
+        .princess-eyes {
+            position: absolute;
+            top: 25px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .eye {
+            width: 8px;
+            height: 8px;
+            background: #333;
+            border-radius: 50%;
+            animation: blink 4s infinite;
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        .princess-mouth {
+            position: absolute;
+            bottom: 12px;
+            width: 12px;
+            height: 6px;
+            border-bottom: 2px solid #ff66b2;
+            border-radius: 0 0 10px 10px;
+            left: 24px;
+        }
+
+        .princess-body {
+            width: 100px;
+            height: 120px;
+            background: var(--princess-pink);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            margin-top: -10px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .princess-arms {
+            position: absolute;
+            top: 70px;
+            width: 120px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 1;
+        }
+
+        .arm {
+            width: 15px;
+            height: 40px;
+            background: #ffe0bd;
+            border-radius: 10px;
+            transform-origin: top center;
+            transition: transform 0.2s;
+        }
+
+        .left-arm { transform: rotate(20deg); }
+        .right-arm { transform: rotate(-20deg); }
+
+        /* 公主加油動畫 */
+        .cheer {
+            animation: jump-cheer 0.5s ease;
+        }
+
+        @keyframes jump-cheer {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+
+        .cheer .left-arm { transform: rotate(-150deg); }
+        .cheer .right-arm { transform: rotate(150deg); }
+
+        /* 呼吸動畫 */
+        .princess-container:not(.cheer) {
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
     </style>
 </head>
 <body>
@@ -260,6 +400,28 @@
         <button id="pause-btn" class="secondary" onclick="togglePause()" disabled>暫停</button>
     </div>
 
+    <!-- 公主角色 -->
+    <div class="princess-container" id="princess">
+        <div class="princess-crown">
+            <div class="crown-spike"></div>
+            <div class="crown-spike"></div>
+            <div class="crown-spike"></div>
+        </div>
+        <div class="princess-head">
+            <div class="princess-hair"></div>
+            <div class="princess-eyes">
+                <div class="eye"></div>
+                <div class="eye"></div>
+            </div>
+            <div class="princess-mouth"></div>
+        </div>
+        <div class="princess-body"></div>
+        <div class="princess-arms">
+            <div class="arm left-arm"></div>
+            <div class="arm right-arm"></div>
+        </div>
+    </div>
+
     <div id="pause-overlay">休息一下 🎀</div>
 
     <div id="game-over">
@@ -278,6 +440,7 @@
         const pauseBtn = document.getElementById('pause-btn');
         const startBtn = document.getElementById('start-btn');
         const pauseOverlay = document.getElementById('pause-overlay');
+        const princess = document.getElementById('princess');
 
         let lastHole;
         let timeUp = false;
@@ -304,7 +467,8 @@
         function peep() {
             if (isPaused || timeUp) return;
             
-            const time = randomTime(500, 1000);
+            // 調整：黃金比例停留時間 (0.8秒 ~ 1.4秒)
+            const stayTime = randomTime(800, 1400); 
             const hole = randomHole(holes);
             const monster = hole.querySelector('.monster');
             monster.classList.remove('whacked');
@@ -312,8 +476,13 @@
             
             peepTimeout = setTimeout(() => {
                 monster.classList.remove('up');
-                if (!timeUp && !isPaused) peep();
-            }, time);
+                
+                // 調整：快速接力出洞 (0.2秒 ~ 0.6秒)
+                const gapTime = randomTime(200, 600);
+                if (!timeUp && !isPaused) {
+                    setTimeout(peep, gapTime);
+                }
+            }, stayTime);
         }
 
         function startGame() {
@@ -374,6 +543,12 @@
             this.classList.remove('up');
             this.classList.add('whacked');
             scoreBoard.textContent = score;
+
+            // 觸發公主加油動畫
+            princess.classList.remove('cheer');
+            void princess.offsetWidth; // 強制重繪以重啟動畫
+            princess.classList.add('cheer');
+            setTimeout(() => princess.classList.remove('cheer'), 500);
 
             createSparkle(e.pageX, e.pageY);
         }
